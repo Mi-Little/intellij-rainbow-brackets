@@ -27,7 +27,7 @@ import java.awt.Graphics2D
 /** From [com.intellij.codeInsight.daemon.impl.IndentGuideRenderer]
  *  Commit history : https://sourcegraph.com/github.com/JetBrains/intellij-community/-/blob/platform/lang-impl/src/com/intellij/codeInsight/daemon/impl/IndentGuideRenderer.java#tab=history
  * */
-class RainbowIndentGuideRenderer: CustomHighlighterRenderer {
+class RainbowIndentGuideRenderer : CustomHighlighterRenderer {
     override fun paint(editor: Editor, highlighter: RangeHighlighter, g: Graphics) {
         if (editor !is EditorEx) return
 
@@ -129,7 +129,13 @@ class RainbowIndentGuideRenderer: CustomHighlighterRenderer {
                         val softWrap: SoftWrap = softWraps[it.startOrPrevWrapIndex]
                         if (softWrap.indentInColumns < indentColumn) {
                             if (startY < currY) {
-                                LinePainter2D.paint((g as Graphics2D), targetX, startY.toDouble(), targetX, currY - 1.toDouble())
+                                LinePainter2D.paint(
+                                    (g as Graphics2D),
+                                    targetX,
+                                    startY.toDouble(),
+                                    targetX,
+                                    currY - 1.toDouble()
+                                )
                             }
                             startY = currY + lineHeight
                         }
@@ -162,11 +168,20 @@ class RainbowIndentGuideRenderer: CustomHighlighterRenderer {
             } catch (e: Throwable) {
                 return null
             }
+            //TODO: Pug (ex-Jade)
 
-            var rainbowInfo = RainbowInfo.RAINBOW_INFO_KEY[element]
+            var rainbowInfo = if (element.language.displayName == "Python") {
+                RainbowInfo.RAINBOW_INFO_KEY[element.firstChild] ?: RainbowInfo.RAINBOW_INFO_KEY[element]
+            } else {
+                RainbowInfo.RAINBOW_INFO_KEY[element]
+            }
             if (rainbowInfo == null && psiFile is XmlFile && element !is XmlTag) {
                 element = PsiTreeUtil.findFirstParent(element, true, XML_TAG_PARENT_CONDITION) ?: return null
                 rainbowInfo = RainbowInfo.RAINBOW_INFO_KEY[element] ?: return null
+            }
+
+            if (element.language.displayName == "Python") {
+                return rainbowInfo
             }
 
             if (!element.isValid || !checkBoundary(document, element, highlighter)) {
